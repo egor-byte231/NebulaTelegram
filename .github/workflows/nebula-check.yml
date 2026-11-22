@@ -6,7 +6,7 @@ on:
       - '.github/workflows/nebula-check.yml'
       - 'TMessagesProj/**'
       - 'TMessagesProj_App/**'
-      - 'tools/nebula_validate.py'
+      - 'Tools/nebula_validate.py'
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -20,7 +20,7 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Check Nebula source files
-        run: python3 tools/nebula_validate.py
+        run: python3 Tools/nebula_validate.py
       - name: Install Android SDK packages
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
