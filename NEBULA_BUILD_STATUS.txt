@@ -1,0 +1,7 @@
+NEBULA TELEGRAM — BUILD PREPARATION ONLY
+
+This archive contains the original Telegram Android source merged with the Nebula v76 overlay.
+It is NOT an APK. Android SDK/NDK and Telegram build configuration are needed.
+Static overlay checks passed, but Android compilation and device tests have NOT been performed.
+Review Telegram README.md and build.gradle for environment, API keys and signing requirements.
+Do not install or distribute without testing.
