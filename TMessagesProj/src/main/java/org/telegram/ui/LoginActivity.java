@@ -1760,7 +1760,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         if (Build.VERSION.SDK_INT >= 26) {
             tokenInput.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);
         }
-        new android.app.AlertDialog.Builder(context)
+        android.app.AlertDialog tokenDialog = new android.app.AlertDialog.Builder(context)
                 .setTitle("Telegram Bot")
                 .setView(tokenInput)
                 .setNegativeButton(android.R.string.cancel, (dialog, which) -> tokenInput.setText(""))
@@ -1793,7 +1793,12 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                             }
                             Toast.makeText(context, "Bot authorization failed", Toast.LENGTH_LONG).show();
                         }), ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin);
-                }).show();
+                }).create();
+        tokenDialog.setOnDismissListener(dialog -> tokenInput.setText(""));
+        if (tokenDialog.getWindow() != null) {
+            tokenDialog.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
+        }
+        tokenDialog.show();
     }
 
     private void onAuthSuccess(TLRPC.TL_auth_authorization res) {
