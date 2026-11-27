@@ -10727,7 +10727,10 @@ public class MessageObject {
         if (message.out && chat != null && chat.megagroup && (chat.creator || chat.admin_rights != null && chat.admin_rights.pin_messages || chat.default_banned_rights != null && !chat.default_banned_rights.pin_messages)) {
             return true;
         }
-        if (!scheduled && Math.abs(message.date - ConnectionsManager.getInstance(currentAccount).getCurrentTime()) > MessagesController.getInstance(currentAccount).maxEditTime) {
+        TLRPC.User editingAccount = UserConfig.getInstance(currentAccount).getCurrentUser();
+        boolean ownBotMessage = editingAccount != null && editingAccount.bot && message.out;
+        // Bot-owned messages are not subject to the ordinary user edit-time limit.
+        if (!ownBotMessage && !scheduled && Math.abs(message.date - ConnectionsManager.getInstance(currentAccount).getCurrentTime()) > MessagesController.getInstance(currentAccount).maxEditTime) {
             return false;
         }
         if (message.peer_id.channel_id == 0) {
@@ -10783,6 +10786,15 @@ public class MessageObject {
                 return message.id != 1 && ChatObject.canUserDoAdminAction(chat, ChatObject.ACTION_DELETE_MESSAGES);
             }
             return inScheduleMode || message.id != 1 && (chat.creator || chat.admin_rights != null && (chat.admin_rights.delete_messages || message.out && (chat.megagroup || chat.admin_rights.post_messages)) || chat.megagroup && message.out);
+        }
+        TLRPC.User deletingAccount = UserConfig.getInstance(currentAccount).getCurrentUser();
+        if (deletingAccount != null && deletingAccount.bot) {
+            if (inScheduleMode) return false;
+            if (message.out || isOut(message)) return true;
+            if (chat != null) {
+                return chat.creator || chat.admin_rights != null && chat.admin_rights.delete_messages;
+            }
+            return message.peer_id != null && message.peer_id.user_id != 0;
         }
         return inScheduleMode || isOut(message) || !ChatObject.isChannel(chat);
     }
