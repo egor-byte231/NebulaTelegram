@@ -148,6 +148,9 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
         try {
             text = Emoji.replaceEmoji(text, textView.getPaint().getFontMetricsInt(), false);
         } catch (Exception ignore) {}
+        if (user.bot) {
+            text = "[BOT] " + text;
+        }
         textView.setText(text);
         final Long emojiStatusId = UserObject.getEmojiStatusDocumentId(user);
         if (emojiStatusId != null) {
