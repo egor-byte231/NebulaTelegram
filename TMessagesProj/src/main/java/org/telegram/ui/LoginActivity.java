@@ -1746,6 +1746,56 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         onAuthSuccess(res);
     }
 
+    private boolean nebulaBotLoginPending;
+
+    private void showNebulaBotLogin(Context context) {
+        if (nebulaBotLoginPending || activityMode != MODE_LOGIN || UserConfig.getInstance(currentAccount).isClientActivated()) {
+            return;
+        }
+        EditText tokenInput = new EditText(context);
+        tokenInput.setSingleLine(true);
+        tokenInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        tokenInput.setHint("BotFather token");
+        tokenInput.setSaveEnabled(false);
+        if (Build.VERSION.SDK_INT >= 26) {
+            tokenInput.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);
+        }
+        new android.app.AlertDialog.Builder(context)
+                .setTitle("Telegram Bot")
+                .setView(tokenInput)
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> tokenInput.setText(""))
+                .setPositiveButton("Log in", (dialog, which) -> {
+                    String token = tokenInput.getText().toString().trim();
+                    tokenInput.setText("");
+                    if (!token.matches("[0-9]+:[A-Za-z0-9_-]+")) {
+                        Toast.makeText(context, "Invalid bot token format", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    nebulaBotLoginPending = true;
+                    TLRPC.TL_auth_importBotAuthorization req = new TLRPC.TL_auth_importBotAuthorization();
+                    req.flags = 0;
+                    req.api_id = BuildVars.APP_ID;
+                    req.api_hash = BuildVars.APP_HASH;
+                    req.bot_auth_token = token;
+                    ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) ->
+                        AndroidUtilities.runOnUIThread(() -> {
+                            nebulaBotLoginPending = false;
+                            if (getParentActivity() == null || getParentActivity().isFinishing()) {
+                                return;
+                            }
+                            if (response instanceof TLRPC.TL_auth_authorization) {
+                                TLRPC.TL_auth_authorization auth = (TLRPC.TL_auth_authorization) response;
+                                if (auth.user != null && auth.user.bot) {
+                                    syncContacts = false;
+                                    onAuthSuccess(auth);
+                                    return;
+                                }
+                            }
+                            Toast.makeText(context, "Bot authorization failed", Toast.LENGTH_LONG).show();
+                        }), ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin);
+                }).show();
+    }
+
     private void onAuthSuccess(TLRPC.TL_auth_authorization res) {
         onAuthSuccess(res, false);
     }
@@ -2154,6 +2204,17 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             subtitleView.setGravity(Gravity.CENTER);
             subtitleView.setLineSpacing(dp(2), 1.0f);
             addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 32, 8, 32, 0));
+
+            if (activityMode == MODE_LOGIN) {
+                TextView botLogin = new TextView(context);
+                botLogin.setText("Log in with bot token");
+                botLogin.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+                botLogin.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText));
+                botLogin.setGravity(Gravity.CENTER);
+                botLogin.setPadding(dp(8), dp(12), dp(8), dp(12));
+                addView(botLogin, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 16, 8, 16, 0));
+                botLogin.setOnClickListener(v -> showNebulaBotLogin(context));
+            }
 
             countryButton = new TextViewSwitcher(context);
             countryButton.setFactory(() -> {
