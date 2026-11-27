@@ -2856,7 +2856,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             MessagesController messagesController = accountInstance.getMessagesController();
             TLRPC.User nebulaCurrentUser = accountInstance.getUserConfig().getCurrentUser();
             if (nebulaCurrentUser != null && nebulaCurrentUser.bot) {
-                // Bots receive their peers through updates, not messages.getDialogs.
+                // Restore locally known bot peers without requesting the server dialog list.
+                accountInstance.getMessagesStorage().getDialogs(0, 0, 100, false);
                 dialogsLoaded[currentAccount] = true;
                 return;
             }
