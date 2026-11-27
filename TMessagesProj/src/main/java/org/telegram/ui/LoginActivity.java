@@ -1807,7 +1807,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         ConnectionsManager.getInstance(currentAccount).setUserId(res.user.id);
         UserConfig.getInstance(currentAccount).clearConfig();
         MessagesController.getInstance(currentAccount).cleanup();
-        UserConfig.getInstance(currentAccount).syncContacts = syncContacts;
+        UserConfig.getInstance(currentAccount).syncContacts = !res.user.bot && syncContacts;
         UserConfig.getInstance(currentAccount).setCurrentUser(res.user);
         UserConfig.getInstance(currentAccount).saveConfig(true);
         MessagesStorage.getInstance(currentAccount).cleanup(true);
@@ -1815,13 +1815,15 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         users.add(res.user);
         MessagesStorage.getInstance(currentAccount).putUsersAndChats(users, null, true, true);
         MessagesController.getInstance(currentAccount).putUser(res.user, false);
-        ContactsController.getInstance(currentAccount).checkAppAccount();
-        MessagesController.getInstance(currentAccount).checkPromoInfo(true);
+        if (!res.user.bot) {
+            ContactsController.getInstance(currentAccount).checkAppAccount();
+            MessagesController.getInstance(currentAccount).checkPromoInfo(true);
+        }
         ConnectionsManager.getInstance(currentAccount).updateDcSettings();
         MessagesController.getInstance(currentAccount).loadAppConfig();
         MessagesController.getInstance(currentAccount).checkPeerColors(false);
 
-        if (res.future_auth_token != null) {
+        if (!res.user.bot && res.future_auth_token != null) {
             AuthTokensHelper.saveLogInToken(res);
         } else {
             FileLog.d("onAuthSuccess future_auth_token is empty");
