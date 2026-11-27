@@ -4675,7 +4675,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     if (mediaWebPage != null) {
                         TLRPC.TL_messages_sendMedia reqSend = new TLRPC.TL_messages_sendMedia();
                         reqSend.message = message;
-                        reqSend.clear_draft = retryMessageObject == null;
+                        reqSend.clear_draft = (getUserConfig().getCurrentUser() == null || !getUserConfig().getCurrentUser().bot) && retryMessageObject == null;
                         reqSend.silent = newMsg.silent;
                         reqSend.peer = sendToPeer;
                         reqSend.random_id = newMsg.random_id;
@@ -4699,7 +4699,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         if (updateStickersOrder && SharedConfig.updateStickersOrderOnSend) {
                             reqSend.update_stickersets_order = true;
                         }
-                        if (newMsg.from_id != null) {
+                        if (newMsg.from_id != null && (getUserConfig().getCurrentUser() == null || !getUserConfig().getCurrentUser().bot)) {
                             reqSend.send_as = getMessagesController().getInputPeer(newMsg.from_id);
                         }
                         if (entities != null && !entities.isEmpty()) {
@@ -5292,7 +5292,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             request.allow_paid_stars = payStars;
                         }
                         request.random_id = newMsg.random_id;
-                        if (newMsg.from_id != null) {
+                        if (newMsg.from_id != null && (getUserConfig().getCurrentUser() == null || !getUserConfig().getCurrentUser().bot)) {
                             request.send_as = getMessagesController().getInputPeer(newMsg.from_id);
                         }
                         request.media = inputMedia;
