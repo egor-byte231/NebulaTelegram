@@ -2820,6 +2820,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         getNotificationCenter().addObserver(this, NotificationCenter.activeAuctionsUpdated);
 
         loadDialogs(getAccountInstance());
+        TLRPC.User nebulaCurrentUser = getUserConfig().getCurrentUser();
+        if (nebulaCurrentUser != null && nebulaCurrentUser.bot) {
+            return true;
+        }
         getMessagesController().getStoriesController().loadAllStories();
         getMessagesController().loadPinnedDialogs(folderId, 0, null);
         if (databaseMigrationHint != null && !getMessagesStorage().isDatabaseMigrationInProgress()) {
@@ -2850,6 +2854,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         int currentAccount = accountInstance.getCurrentAccount();
         if (!dialogsLoaded[currentAccount]) {
             MessagesController messagesController = accountInstance.getMessagesController();
+            TLRPC.User nebulaCurrentUser = accountInstance.getUserConfig().getCurrentUser();
+            if (nebulaCurrentUser != null && nebulaCurrentUser.bot) {
+                // Bots receive their peers through updates, not messages.getDialogs.
+                dialogsLoaded[currentAccount] = true;
+                return;
+            }
             messagesController.loadGlobalNotificationsSettings();
             messagesController.loadDialogs(0, 0, 100, true);
             messagesController.loadHintDialogs();
