@@ -4740,7 +4740,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         final TLRPC.TL_messages_sendMessage reqSend = new TLRPC.TL_messages_sendMessage();
 
                         reqSend.message = message;
-                        reqSend.clear_draft = retryMessageObject == null;
+                        TLRPC.User sendingAccount = getUserConfig().getCurrentUser();
+                        boolean sendingAsBot = sendingAccount != null && sendingAccount.bot;
+                        reqSend.clear_draft = !sendingAsBot && retryMessageObject == null;
                         reqSend.silent = newMsg.silent;
                         reqSend.peer = sendToPeer;
                         reqSend.random_id = newMsg.random_id;
@@ -4763,7 +4765,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         if (updateStickersOrder && SharedConfig.updateStickersOrderOnSend) {
                             reqSend.update_stickersets_order = true;
                         }
-                        if (newMsg.from_id != null) {
+                        if (!sendingAsBot && newMsg.from_id != null) {
                             reqSend.send_as = getMessagesController().getInputPeer(newMsg.from_id);
                         }
                         if (!searchLinks) {
