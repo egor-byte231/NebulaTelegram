@@ -152,6 +152,15 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
             text = "[BOT] " + text;
         }
         textView.setText(text);
+        setOnLongClickListener(user.bot && UserObject.getPublicUsername(user) != null && !UserObject.getPublicUsername(user).isEmpty() ? v -> {
+            String username = UserObject.getPublicUsername(user);
+            android.content.Intent share = new android.content.Intent(android.content.Intent.ACTION_SEND);
+            share.setType("text/plain");
+            share.putExtra(android.content.Intent.EXTRA_TEXT, "https://t.me/" + username + "?startgroup=true");
+            getContext().startActivity(android.content.Intent.createChooser(share, "Bot Invite"));
+            return true;
+        } : null);
+        setLongClickable(user.bot && UserObject.getPublicUsername(user) != null && !UserObject.getPublicUsername(user).isEmpty());
         final Long emojiStatusId = UserObject.getEmojiStatusDocumentId(user);
         if (emojiStatusId != null) {
             textView.setDrawablePadding(dp(4));
