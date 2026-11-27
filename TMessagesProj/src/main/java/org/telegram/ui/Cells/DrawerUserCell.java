@@ -140,7 +140,10 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
     public void setAccount(int account) {
         accountNumber = account;
         final TLRPC.User user = UserConfig.getInstance(accountNumber).getCurrentUser();
+        setOnLongClickListener(null);
+        setLongClickable(false);
         if (user == null) {
+            textView.setText("");
             return;
         }
         avatarDrawable.setInfo(account, user);
@@ -152,15 +155,17 @@ public class DrawerUserCell extends FrameLayout implements NotificationCenter.No
             text = "[BOT] " + text;
         }
         textView.setText(text);
-        setOnLongClickListener(user.bot && UserObject.getPublicUsername(user) != null && !UserObject.getPublicUsername(user).isEmpty() ? v -> {
-            String username = UserObject.getPublicUsername(user);
+        final String botUsername = UserObject.getPublicUsername(user);
+        final boolean canInviteBot = user.bot && !user.bot_nochats && botUsername != null && !botUsername.isEmpty();
+        setOnLongClickListener(canInviteBot ? v -> {
+            String username = botUsername;
             android.content.Intent share = new android.content.Intent(android.content.Intent.ACTION_SEND);
             share.setType("text/plain");
             share.putExtra(android.content.Intent.EXTRA_TEXT, "https://t.me/" + username + "?startgroup=true");
             getContext().startActivity(android.content.Intent.createChooser(share, "Bot Invite"));
             return true;
         } : null);
-        setLongClickable(user.bot && UserObject.getPublicUsername(user) != null && !UserObject.getPublicUsername(user).isEmpty());
+        setLongClickable(canInviteBot);
         final Long emojiStatusId = UserObject.getEmojiStatusDocumentId(user);
         if (emojiStatusId != null) {
             textView.setDrawablePadding(dp(4));
